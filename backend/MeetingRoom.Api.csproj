@@ -19,4 +19,10 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.22.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Lets MeetingRoom.Api.Tests use WebApplicationFactory<Program> without a public
+         partial Program shim - ASP0027 flags that pattern as no longer necessary. -->
+    <InternalsVisibleTo Include="MeetingRoom.Api.Tests" />
+  </ItemGroup>
+
 </Project>

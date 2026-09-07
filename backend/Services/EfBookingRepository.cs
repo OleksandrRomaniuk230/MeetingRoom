@@ -1,5 +1,6 @@
 using MeetingRoom.Api.Data;
 using MeetingRoom.Api.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace MeetingRoom.Api.Services;
@@ -29,11 +30,18 @@ public sealed class EfBookingRepository(ApplicationDbContext dbContext) : IBooki
             await dbContext.SaveChangesAsync(cancellationToken);
             return new BookingCreationResult(BookingCreationStatus.Created, booking);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateException ex) when (ex is DbUpdateConcurrencyException || IsUniqueBookingViolation(ex))
         {
-            // TimeSlot.RowVersion caught a race: another request committed a change to this
-            // same slot between our read and our write. This tracker is now in an
-            // indeterminate state for both entries, so clear it before reporting.
+            // Two distinct races land here:
+            //  - DbUpdateConcurrencyException: TimeSlot.RowVersion caught a concurrent
+            //    change to the slot between our read and our write.
+            //  - A plain DbUpdateException wrapping a unique-key violation on
+            //    IX_Bookings_TimeSlotId: with enough simultaneous callers, more than one
+            //    can read the slot as unbooked before any of them commits, so the
+            //    RowVersion check on the *slot* update doesn't fire for all of the losers -
+            //    the Bookings table's own unique index is the backstop that always does.
+            // Either way, this tracker is now in an indeterminate state, so clear it before
+            // reporting.
             dbContext.ChangeTracker.Clear();
 
             // Confirm the slot really was claimed rather than assuming - it could also have
@@ -47,4 +55,8 @@ public sealed class EfBookingRepository(ApplicationDbContext dbContext) : IBooki
                 : BookingCreationStatus.SlotNotFound);
         }
     }
+
+    private static bool IsUniqueBookingViolation(DbUpdateException ex) =>
+        ex.InnerException is SqlException { Number: 2601 or 2627 } sqlEx &&
+        sqlEx.Message.Contains("IX_Bookings_TimeSlotId", StringComparison.Ordinal);
 }
