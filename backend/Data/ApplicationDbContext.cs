@@ -20,6 +20,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
 
+    public DbSet<Booking> Bookings => Set<Booking>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -66,6 +68,32 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.HasIndex(t => new { t.MeetingRoomId, t.StartTime }).IsUnique();
 
             entity.HasData(SeedTimeSlots());
+        });
+
+        modelBuilder.Entity<Booking>(entity =>
+        {
+            entity.ToTable("Bookings");
+            entity.HasKey(b => b.Id);
+            entity.Property(b => b.BookedAtUtc).IsRequired();
+
+            // A slot can have at most one booking - modeled as a true one-to-one, not just a
+            // unique index, so EF enforces it in both directions of the navigation.
+            entity.HasIndex(b => b.TimeSlotId).IsUnique();
+
+            entity.HasOne(b => b.TimeSlot)
+                .WithOne(t => t.Booking)
+                .HasForeignKey<Booking>(b => b.TimeSlotId)
+                // A booking is evidence of a reservation; deleting its slot must not silently
+                // erase that history. This also means deleting a Room cascades to its
+                // TimeSlots (see above) only for slots with no booking - a room with an
+                // actively booked slot cannot be deleted until the booking is removed.
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                // Deleting a user takes their bookings with them.
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

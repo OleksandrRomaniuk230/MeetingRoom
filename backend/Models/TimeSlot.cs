@@ -14,4 +14,6 @@ public sealed class TimeSlot
     public required Guid MeetingRoomId { get; init; }
 
     public Room? MeetingRoom { get; init; }
+
+    public Booking? Booking { get; init; }
 }
