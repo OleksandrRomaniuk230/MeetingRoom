@@ -98,6 +98,9 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
+builder.Services.AddScoped<IRoomRepository, EfRoomRepository>();
+builder.Services.AddScoped<ITimeSlotRepository, EfTimeSlotRepository>();
+
 // ---------------------------------------------------------------------------
 // Identity services
 // ---------------------------------------------------------------------------
