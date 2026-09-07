@@ -43,7 +43,7 @@ public sealed class JwtTokenService : ITokenService
                 [JwtRegisteredClaimNames.Sub] = user.Username,
                 [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString(),
                 [JwtRegisteredClaimNames.Email] = user.Email,
-                ["uid"] = user.Id.ToString(),
+                [ClaimNames.UserId] = user.Id.ToString(),
 
                 // Always an array so consumers can parse one shape once multiple roles exist.
                 [ClaimNames.Roles] = new[] { user.Role.ToClaimValue() },

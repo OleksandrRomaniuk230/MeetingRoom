@@ -171,9 +171,6 @@ These are load-bearing. Read before touching `Program.cs` or adding an endpoint.
 
 Deliberate, not oversights — worth knowing before building on top:
 
-- `InMemoryUserRepository` is **process-local and non-persistent**. Accounts vanish on
-  restart and are not shared across instances. Replace with an EF Core implementation of
-  `IUserRepository` before running more than one node.
 - **No refresh tokens, account lockout, or rate limiting.** Login is a bare credential check.
 - **No test project** (see above).
 - `Microsoft.OpenApi` 2.0.0 arrives transitively via `Microsoft.AspNetCore.OpenApi` 10.0.9

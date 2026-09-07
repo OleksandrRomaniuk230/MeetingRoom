@@ -100,6 +100,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 
 builder.Services.AddScoped<IRoomRepository, EfRoomRepository>();
 builder.Services.AddScoped<ITimeSlotRepository, EfTimeSlotRepository>();
+builder.Services.AddScoped<IBookingRepository, EfBookingRepository>();
 
 // ---------------------------------------------------------------------------
 // Identity services
@@ -109,9 +110,7 @@ builder.Services.AddSingleton(builder.Configuration
     .GetSection(AdminSeedOptions.SectionName)
     .Get<AdminSeedOptions>() ?? new AdminSeedOptions());
 
-// InMemoryUserRepository keeps accounts in process memory only; replace with a
-// database-backed IUserRepository before deploying more than a single instance.
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddSingleton<ITokenService, JwtTokenService>();
 

@@ -8,4 +8,7 @@ public static class ClaimNames
 {
     /// <summary>Multi-valued claim carrying the user's <see cref="RoleNames"/> values.</summary>
     public const string Roles = "roles";
+
+    /// <summary>Carries <see cref="User.Id"/> as a string.</summary>
+    public const string UserId = "uid";
 }
