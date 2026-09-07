@@ -1,11 +1,13 @@
 using System.Text;
 using MeetingRoom.Api.Authorization;
 using MeetingRoom.Api.Configuration;
+using MeetingRoom.Api.Data;
 using MeetingRoom.Api.Models;
 using MeetingRoom.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -82,6 +84,19 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(AuthPolicies.AdminOnly, policy => policy
         .RequireAuthenticatedUser()
         .RequireRole(RoleNames.Admin));
+
+// ---------------------------------------------------------------------------
+// Database
+// ---------------------------------------------------------------------------
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "'ConnectionStrings:DefaultConnection' is not configured. Set it via user secrets or the " +
+        "ConnectionStrings__DefaultConnection environment variable.");
+}
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 // ---------------------------------------------------------------------------
 // Identity services
