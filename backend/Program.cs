@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 
 // ---------------------------------------------------------------------------
@@ -136,6 +137,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<MeetingRoom.Api.Hubs.BookingHub>("/api/hubs/bookings");
 app.MapControllers();
 
 app.Run();

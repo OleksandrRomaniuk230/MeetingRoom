@@ -1,7 +1,12 @@
 using MeetingRoom.Api.Authorization;
 using MeetingRoom.Api.Models;
 using MeetingRoom.Api.Services;
+using MeetingRoom.Api.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MeetingRoom.Api.Controllers;
 
@@ -12,27 +17,28 @@ namespace MeetingRoom.Api.Controllers;
 public sealed class BookingsController : ControllerBase
 {
     private readonly IBookingRepository _bookings;
+    private readonly IHubContext<BookingHub> _hubContext;
 
-    public BookingsController(IBookingRepository bookings)
+    public BookingsController(IBookingRepository bookings, IHubContext<BookingHub> hubContext)
     {
         _bookings = bookings;
+        _hubContext = hubContext;
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create(CreateBookingRequest request, CancellationToken cancellationToken)
     {
-        var userId = User.GetUserId();
+        Guid userId = User.GetUserId();
+
         var result = await _bookings.CreateAsync(request.TimeSlotId, userId, cancellationToken);
 
         return result.Status switch
         {
-            BookingCreationStatus.Created => Created(
-                $"/api/bookings/{result.Booking!.Id}",
-                BookingResponse.From(result.Booking)),
+            BookingCreationStatus.Created => await HandleSuccessfulBooking(result.Booking!, request.TimeSlotId.ToString()),
 
             BookingCreationStatus.SlotNotFound => NotFound(new ProblemDetails
             {
@@ -50,5 +56,12 @@ public sealed class BookingsController : ControllerBase
 
             _ => throw new ArgumentOutOfRangeException(nameof(result), result.Status, "Unmapped booking creation status."),
         };
+    }
+
+    private async Task<IActionResult> HandleSuccessfulBooking(Booking booking, string timeSlotId)
+    {
+        await _hubContext.Clients.All.SendAsync("SlotStatusChanged", timeSlotId, true);
+
+        return Ok(BookingResponse.From(booking));
     }
 }
