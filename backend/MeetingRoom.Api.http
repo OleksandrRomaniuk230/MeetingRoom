@@ -1,0 +1,72 @@
+@host = http://localhost:5080
+
+### Register a new account -> 201, always role "user"
+# @name register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "password": "a decent passphrase"
+}
+
+### Log in as that user -> 200 with a token carrying roles: ["user"]
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "a decent passphrase"
+}
+
+### Log in as the seeded admin -> token carrying roles: ["admin"]
+# Requires the AdminSeed section in appsettings.Development.json.
+# @name adminLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "<AdminSeed:Password>"
+}
+
+### Echo the current identity -> 200
+GET {{host}}/api/auth/me
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Same endpoint without a token -> 401 Unauthorized
+GET {{host}}/api/auth/me
+
+### Wrong password -> 401, identical body to an unknown username
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "wrong"
+}
+
+### Duplicate username -> 409 Conflict
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "someone.else@example.com",
+  "password": "a decent passphrase"
+}
+
+### Validation failure -> 400 with ProblemDetails
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "x",
+  "email": "not-an-email",
+  "password": "short"
+}
+
+### OpenAPI document (Development only, anonymous)
+GET {{host}}/openapi/v1.json

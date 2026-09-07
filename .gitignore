@@ -1,0 +1,40 @@
+## Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.dll
+*.exe
+*.pdb
+
+## Local secrets
+# Contains Jwt:Key and AdminSeed:Password. Copy
+# appsettings.Development.template.json to appsettings.Development.json and fill it in,
+# or use `dotnet user-secrets`. See CLAUDE.md.
+appsettings.Development.json
+appsettings.Local.json
+*.user
+*.pfx
+.env
+
+## Agent / tooling local state
+# Machine-local permission grants, not shared config.
+.claude/settings.local.json
+
+## IDE / editor
+.idea/
+.vs/
+.vscode/
+*.suo
+*.userprefs
+
+## OS
+[Tt]humbs.db
+.DS_Store
+
+## Test / coverage output
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+*.trx
