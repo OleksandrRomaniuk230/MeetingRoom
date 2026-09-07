@@ -63,6 +63,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.Property(t => t.StartTime).IsRequired();
             entity.Property(t => t.EndTime).IsRequired();
             entity.Property(t => t.IsBooked).IsRequired();
+            entity.Property(t => t.RowVersion).IsRowVersion();
 
             // A room can only have one slot starting at a given time.
             entity.HasIndex(t => new { t.MeetingRoomId, t.StartTime }).IsUnique();
