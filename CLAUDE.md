@@ -11,29 +11,103 @@ There is no solution file — always pass the `.csproj` path explicitly, or `cd 
 - .NET SDK **10.0.400** (pinned by nothing — there is no `global.json`; add one if drift becomes a problem)
 - Verify with `dotnet --list-sdks`
 
-## Commands
+## Quick Start Sequence
+
+Follow this workflow for a fresh development environment:
+
+```bash
+# 1. Restore NuGet packages
+dotnet restore backend/MeetingRoom.Api.csproj
+
+# 2. Build the project
+dotnet build backend/MeetingRoom.Api.csproj --no-restore
+
+# 3. Initialize database (creates schema, runs migrations, seeds admin user)
+dotnet ef database update --project backend/MeetingRoom.Api.csproj
+
+# 4. Run the backend (Development, http://localhost:5080)
+dotnet run --project backend/MeetingRoom.Api.csproj --launch-profile http
+
+# Then in a separate terminal, run the frontend:
+cd frontend
+npm install
+npm run dev
+
+# Application ready at: http://localhost:5173
+# API available at: http://localhost:5080/api
+# OpenAPI docs at: http://localhost:5080/openapi/v1.json (Development only)
+```
+
+Login with seeded admin credentials:
+- **Username**: `admin`
+- **Password**: `dev-only-admin-password`
+
+## Comprehensive Command Reference
 
 Run these from the repository root. All paths are relative to it.
 
+### Package & Build Management
+
 ```bash
-# Restore
+# Restore NuGet packages
 dotnet restore backend/MeetingRoom.Api.csproj
 
-# Build (add --no-restore once packages are restored)
+# Build (verbose, shows all warnings)
 dotnet build backend/MeetingRoom.Api.csproj
 
-# Quiet build - only warnings and errors
+# Build (add --no-restore once packages are restored)
+dotnet build backend/MeetingRoom.Api.csproj --no-restore
+
+# Quiet build - only warnings and errors (CI-friendly)
 dotnet build backend/MeetingRoom.Api.csproj --no-restore -v q --nologo
 
+# Clean build output
+dotnet clean backend/MeetingRoom.Api.csproj
+```
+
+### Database Initialization & Management
+
+```bash
+# Create database and run all pending migrations (first-time setup)
+dotnet ef database update --project backend/MeetingRoom.Api.csproj
+
+# Create a new migration based on model changes
+dotnet ef migrations add <MigrationName> --project backend/MeetingRoom.Api.csproj
+
+# Remove the last migration (if not yet applied to database)
+dotnet ef migrations remove --project backend/MeetingRoom.Api.csproj
+
+# Drop entire database (DESTRUCTIVE - removes all data)
+dotnet ef database drop --project backend/MeetingRoom.Api.csproj
+
+# View all pending migrations
+dotnet ef migrations list --project backend/MeetingRoom.Api.csproj
+```
+
+### Running the Application
+
+```bash
 # Run (Development, http://localhost:5080)
 dotnet run --project backend/MeetingRoom.Api.csproj --launch-profile http
 
 # Run over HTTPS (https://localhost:7080 + http://localhost:5080)
 dotnet run --project backend/MeetingRoom.Api.csproj --launch-profile https
 
-# Formatting - verify in CI, fix locally
-dotnet format backend/MeetingRoom.Api.csproj --verify-no-changes
+# Run with custom environment
+ASPNETCORE_ENVIRONMENT=Staging dotnet run --project backend/MeetingRoom.Api.csproj
+```
+
+### Code Quality & Formatting
+
+```bash
+# Format - fix whitespace and style issues
 dotnet format backend/MeetingRoom.Api.csproj
+
+# Format - verify style without changes (CI mode)
+dotnet format backend/MeetingRoom.Api.csproj --verify-no-changes
+
+# Analyzer - check for code issues and warnings
+dotnet build backend/MeetingRoom.Api.csproj /p:TreatWarningsAsErrors=true
 ```
 
 Both launch profiles set `ASPNETCORE_ENVIRONMENT=Development` and do not open a browser.
