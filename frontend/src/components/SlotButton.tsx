@@ -104,7 +104,7 @@ export function SlotButton({
   const isOwnBooking = slotUserId !== '' && slotUserId === authedUserId;
   const isRedState = isAdmin || isOwnBooking;
 
-  let buttonColor = styles.slotColorFree; // green - available
+  let buttonColor: string = styles.slotColorFree; // green - available
   let cursorStyle = 'pointer';
 
   if (slot.isBooked) {
