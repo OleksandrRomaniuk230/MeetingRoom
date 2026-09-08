@@ -137,14 +137,23 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 
 // 2. Safely capture redirects without clashing on local development environments
-// app.UseHttpsRedirection(); // Commented out to eliminate the "Failed to determine the https port" local warning
+// app.UseHttpsRedirection(); 
 
-// 3. Evaluate identity token claims [3.2]
+app.UseDefaultFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Features.Get<Microsoft.AspNetCore.Http.Features.IEndpointFeature>()?.Endpoint?.Metadata?.Append(new AllowAnonymousAttribute());
+    }
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 4. Map active WebSocket hub pipelines and standard API controllers [7.1]
-app.MapHub<MeetingRoom.Api.Hubs.BookingHub>("/api/hubs/bookings");
+app.MapHub<MeetingRoom.Api.Hubs.BookingHub>("/api/hubs/bookings").AllowAnonymous();
 app.MapControllers();
+
+app.MapFallbackToFile("index.html").AllowAnonymous();
 
 app.Run();

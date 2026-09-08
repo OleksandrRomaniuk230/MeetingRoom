@@ -16,7 +16,9 @@ export interface AdminPanelHandle {
   handleDeleteRoom: (roomId: string) => Promise<void>;
 }
 
-const API_URL = 'http://localhost:5080/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5080/api' 
+  : '/api';
 
 export const AdminPanel = forwardRef<AdminPanelHandle, AdminPanelProps>(
   (

@@ -5,8 +5,10 @@ interface AuthFormProps {
   onAuthSuccess: (token: string, userRole: string, userId: string) => void;
 }
 
-const API_URL = 'http://localhost:5080/api';
-
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5080/api' 
+  : '/api';
+  
 export function AuthForm({ onAuthSuccess }: AuthFormProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

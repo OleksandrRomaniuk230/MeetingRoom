@@ -18,7 +18,9 @@ interface SlotButtonProps {
   onRefresh: () => Promise<void>;
 }
 
-const API_URL = 'http://localhost:5080/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5080/api' 
+  : '/api';
 
 // Utility function - format time from ISO string
 function formatSlotLabel(isoString: string): string {

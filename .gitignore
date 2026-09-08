@@ -38,3 +38,6 @@ appsettings.Local.json
 coverage*.json
 coverage*.xml
 *.trx
+
+
+/backend/publish/

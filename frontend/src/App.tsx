@@ -26,7 +26,9 @@ interface Room {
   slots?: TimeSlot[];
 }
 
-const API_URL = 'http://localhost:5080/api';
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5080/api' 
+  : '/api';
 
 export default function App() {
   // ========== Global Authentication State ==========
@@ -89,10 +91,12 @@ export default function App() {
   useEffect(() => {
     if (!token) return;
 
+    const SIGNALR_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:5080/api/hubs/bookings'
+      : '/api/hubs/bookings';
+
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:5080/api/hubs/bookings', {
-        accessTokenFactory: () => token,
-      })
+      .withUrl(SIGNALR_URL, { accessTokenFactory: () => token })
       .withAutomaticReconnect()
       .build();
 

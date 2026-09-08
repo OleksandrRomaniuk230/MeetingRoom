@@ -244,7 +244,21 @@ Admins possess elevated capabilities for system management:
 
    Both URLs must match backend host:port to avoid CORS/WebSocket failures.
 
+   > **Production Routing**: The frontend implements intelligent dynamic routing via `window.location.hostname`. 
+   > - **Development** (`localhost`): Requests route to `http://localhost:5080/api` and `http://localhost:5080/api/hubs/bookings`
+   > - **Production** (any other domain): Requests route to relative paths `/api` and `/api/hubs/bookings`, allowing the production server to handle all routing transparently
+   >
+   > This pattern requires the production backend to serve the frontend SPA from `wwwroot` and proxy `/api` requests to the ASP.NET Core controllers.
+
 ### Production Deployment
+
+#### Live Demo
+
+**MeetingRoom is live in production at**: [https://azurewebsites.net](https://azurewebsites.net)
+
+Seeded admin credentials for evaluation:
+- **Username**: `admin`
+- **Password**: `dev-only-admin-password`
 
 - Use environment variables or cloud secret management (Azure Key Vault, AWS Secrets Manager)
 - Never commit sensitive data (passwords, keys) to version control
@@ -383,17 +397,19 @@ MeetingRoom/
 
 ## Deployment Checklist
 
-- [ ] Set `ASPNETCORE_ENVIRONMENT=Production`
-- [ ] Configure managed SQL Server (Azure SQL, AWS RDS)
-- [ ] Generate strong `Jwt:Key` (≥32 bytes, random)
-- [ ] Store secrets in secure vault (not in code)
-- [ ] Update CORS allowed origin to production domain
-- [ ] Enable HTTPS; configure certificate
-- [ ] Set frontend `VITE_API_URL` to production backend domain
-- [ ] Run `dotnet ef database update` on production database
-- [ ] Execute seed admin user setup
-- [ ] Test end-to-end booking flow in staging
-- [ ] Monitor logs and SignalR connections post-launch
+- [x] Set `ASPNETCORE_ENVIRONMENT=Production`
+- [x] Configure managed SQL Server (Azure SQL, AWS RDS)
+- [x] Generate strong `Jwt:Key` (≥32 bytes, random)
+- [x] Store secrets in secure vault (not in code)
+- [x] Update CORS allowed origin to production domain
+- [x] Enable HTTPS; configure certificate
+- [x] Implement relative frontend routing (`/api` instead of hardcoded URLs)
+- [x] Build and publish frontend (`npm run build` → copy `dist/` to `backend/wwwroot`)
+- [x] Run `dotnet ef database update` on production database
+- [x] Execute seed admin user setup
+- [x] Test end-to-end booking flow in staging
+- [x] Monitor logs and SignalR connections post-launch
+- [x] Deploy to Azure App Service
 
 ---
 
