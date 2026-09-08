@@ -23,26 +23,6 @@ public sealed class SlotsController : ControllerBase
         _slots = slots;
     }
 
-    [HttpGet("rooms/{roomId:guid}/slots")]
-    [ProducesResponseType(typeof(IEnumerable<TimeSlotResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByRoom(Guid roomId, CancellationToken cancellationToken)
-    {
-        var room = await _rooms.GetByIdAsync(roomId, cancellationToken);
-        if (room is null)
-        {
-            return NotFound(new ProblemDetails
-            {
-                Status = StatusCodes.Status404NotFound,
-                Title = "Room not found",
-                Detail = $"No room with id '{roomId}' exists.",
-            });
-        }
-
-        var slots = await _slots.GetByRoomIdAsync(roomId, cancellationToken);
-        return Ok(slots.Select(TimeSlotResponse.From));
-    }
-
     [HttpPost("slots/{id:guid}/toggle")]
     [ProducesResponseType(typeof(TimeSlotResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -1,5 +1,7 @@
 using MeetingRoom.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 
 namespace MeetingRoom.Api.Data;
 
@@ -51,9 +53,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasData(
-                new { Id = ConferenceRoomId, Name = "Conference Room A", Capacity = 12 },
-                new { Id = FocusRoomId, Name = "Focus Room B", Capacity = 4 },
-                new { Id = BoardRoomId, Name = "Board Room C", Capacity = 20 });
+                new { Id = ConferenceRoomId, Name = "Room A", Capacity = 12 },
+                new { Id = FocusRoomId, Name = "Room B", Capacity = 4 },
+                new { Id = BoardRoomId, Name = "Room C", Capacity = 20 });
         });
 
         modelBuilder.Entity<TimeSlot>(entity =>
@@ -98,11 +100,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
         });
     }
 
-    /// <summary>Hourly 09:00-17:00 UTC slots for each seeded room on a fixed business day.</summary>
+    /// <summary>Hourly 07:00-18:00 UTC slots for each seeded room on a fixed business day.</summary>
     private static IEnumerable<object> SeedTimeSlots()
     {
-        const int businessDayStartHour = 9;
-        const int businessDayEndHour = 17;
+        // ✨ Виправлено: Початок о 7, кінець о 18 (остання кнопка почнеться о 17:00 і покриє час до 18:00) [4.2]
+        const int businessDayStartHour = 7;
+        const int businessDayEndHour = 18;
 
         (int RoomIndex, Guid RoomId)[] rooms =
         [

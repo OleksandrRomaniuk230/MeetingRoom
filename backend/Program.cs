@@ -18,6 +18,20 @@ builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 
 // ---------------------------------------------------------------------------
+// CORS Policy Configuration
+// ---------------------------------------------------------------------------
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // Allow frontend development port
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Mandated to establish real-time SignalR WebSockets
+    });
+});
+
+// ---------------------------------------------------------------------------
 // JWT bearer authentication
 // ---------------------------------------------------------------------------
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
@@ -31,7 +45,6 @@ if (string.IsNullOrWhiteSpace(jwtOptions.Key))
         $"{JwtOptions.SectionName}__Key environment variable.");
 }
 
-// HS256 requires a key of at least 256 bits.
 var keyBytes = Encoding.UTF8.GetBytes(jwtOptions.Key);
 if (keyBytes.Length < 32)
 {
@@ -47,10 +60,7 @@ builder.Services.AddSingleton(new SigningCredentials(signingKey, SecurityAlgorit
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // Keep the original JWT claim names ("sub", "roles") instead of remapping
-        // them to the legacy WS-Federation URIs.
         options.MapInboundClaims = false;
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -74,10 +84,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // ---------------------------------------------------------------------------
 // Authorization
 // ---------------------------------------------------------------------------
-// The fallback policy denies by default: any endpoint that does not carry its own
-// [Authorize] or [AllowAnonymous] still requires a valid bearer token. New endpoints are
-// therefore private until someone deliberately opens them up, rather than public until
-// someone remembers to lock them down.
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
@@ -121,22 +127,23 @@ await app.Services.SeedAdminAsync();
 
 if (app.Environment.IsDevelopment())
 {
-    // The fallback policy would otherwise demand a token for the document itself, which
-    // you cannot get without first reading the document.
     app.MapOpenApi().AllowAnonymous();
 }
 
-app.UseHttpsRedirection();
+// ---------------------------------------------------------------------------
+// HTTP Request Pipeline Configuration (ORDER MATTERS)
+// ---------------------------------------------------------------------------
 
-// Order matters and is load-bearing:
-//   UseAuthentication  - reads/validates the bearer token, builds HttpContext.User
-//   UseAuthorization   - evaluates [Authorize]/policies against that User
-//   MapControllers     - runs the endpoint only once authorization has passed
-// Swapping the first two leaves User unauthenticated at authorization time, which turns
-// every protected endpoint into a blanket 401.
+app.UseCors();
+
+// 2. Safely capture redirects without clashing on local development environments
+// app.UseHttpsRedirection(); // Commented out to eliminate the "Failed to determine the https port" local warning
+
+// 3. Evaluate identity token claims [3.2]
 app.UseAuthentication();
 app.UseAuthorization();
 
+// 4. Map active WebSocket hub pipelines and standard API controllers [7.1]
 app.MapHub<MeetingRoom.Api.Hubs.BookingHub>("/api/hubs/bookings");
 app.MapControllers();
 
